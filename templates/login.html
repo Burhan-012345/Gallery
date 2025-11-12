@@ -1,0 +1,107 @@
+{% extends "base.html" %} {% block title %}Admin Login - Our Memories{% endblock
+%} {% block content %}
+<div
+  class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8"
+>
+  <div class="max-w-md w-full space-y-8">
+    <!-- Romantic Header -->
+    <div class="text-center">
+      <div
+        class="mx-auto h-20 w-20 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full flex items-center justify-center mb-4"
+      >
+        <i class="fas fa-heart text-white text-2xl"></i>
+      </div>
+      <h2 class="text-3xl font-extrabold text-gray-900 dark:text-white">
+        Admin Access
+      </h2>
+      <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+        Enter your credentials to manage our memories
+      </p>
+    </div>
+
+    <!-- Login Form -->
+    <form class="mt-8 space-y-6" method="POST" action="{{ url_for('login') }}">
+      {{ form.hidden_tag() }}
+
+      <div class="rounded-2xl shadow-sm -space-y-px">
+        <!-- Username Field -->
+        <div class="relative">
+          {{ form.username(class="relative block w-full px-4 py-3 pl-12 border
+          border-gray-300 dark:border-gray-600 placeholder-gray-500
+          text-gray-900 dark:text-white dark:bg-gray-700 rounded-t-2xl
+          focus:outline-none focus:ring-2 focus:ring-pink-500
+          focus:border-pink-500 focus:z-10 transition-all duration-300",
+          placeholder="Username") }}
+          <div
+            class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"
+          >
+            <i class="fas fa-user text-pink-500"></i>
+          </div>
+        </div>
+
+        <!-- Password Field -->
+        <div class="relative">
+          {{ form.password(class="relative block w-full px-4 py-3 pl-12 border
+          border-gray-300 dark:border-gray-600 placeholder-gray-500
+          text-gray-900 dark:text-white dark:bg-gray-700 rounded-b-2xl
+          focus:outline-none focus:ring-2 focus:ring-pink-500
+          focus:border-pink-500 focus:z-10 transition-all duration-300",
+          placeholder="Password", type="password") }}
+          <div
+            class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"
+          >
+            <i class="fas fa-lock text-pink-500"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Submit Button -->
+      <div>
+        {{ form.submit(class="group relative w-full flex justify-center py-3
+        px-4 border border-transparent text-sm font-medium rounded-2xl
+        text-white bg-gradient-to-r from-pink-500 to-purple-600
+        hover:from-pink-600 hover:to-purple-700 focus:outline-none focus:ring-2
+        focus:ring-offset-2 focus:ring-pink-500 transform transition-all
+        duration-300 hover:scale-105 shadow-lg") }}
+      </div>
+
+      <!-- Demo Credentials -->
+      <div class="text-center">
+        <p
+          class="text-xs text-gray-500 dark:text-gray-400 bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg"
+        >
+          <i class="fas fa-info-circle mr-1"></i>
+          Demo: username: <strong>admin</strong>, password:
+          <strong>admin123</strong>
+        </p>
+      </div>
+    </form>
+
+    <!-- Back to Gallery -->
+    <div class="text-center">
+      <a
+        href="{{ url_for('index') }}"
+        class="text-pink-600 hover:text-pink-500 dark:text-pink-400 dark:hover:text-pink-300 transition-colors duration-300"
+      >
+        <i class="fas fa-arrow-left mr-2"></i>
+        Back to Gallery
+      </a>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* Custom login animations */
+  form {
+    animation: fadeInUp 0.8s ease-out;
+  }
+
+  .rounded-t-2xl {
+    border-bottom: none;
+  }
+
+  .rounded-b-2xl {
+    border-top: none;
+  }
+</style>
+{% endblock %}

@@ -1,0 +1,105 @@
+{% extends "base.html" %} {% block title %}Edit Photo - Our Memories{% endblock
+%} {% block content %}
+<div class="container mx-auto px-4 py-8 max-w-2xl">
+  <!-- Header -->
+  <div class="text-center mb-8">
+    <h1
+      class="text-4xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent mb-4"
+    >
+      Edit Memory
+    </h1>
+    <p class="text-lg text-gray-600 dark:text-gray-300">
+      Update this beautiful moment in our story 💫
+    </p>
+  </div>
+
+  <!-- Current Photo Preview -->
+  <div
+    class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-2xl shadow-xl p-6 mb-8 border border-pink-100 dark:border-gray-700"
+  >
+    <div class="text-center">
+      <img
+        src="{{ url_for('uploaded_file', filename=photo.filename) }}"
+        alt="{{ photo.caption }}"
+        class="mx-auto h-48 rounded-2xl shadow-lg object-cover mb-4"
+      />
+      <p class="text-sm text-gray-500 dark:text-gray-400">
+        Uploaded on {{ photo.date_uploaded.strftime('%B %d, %Y at %H:%M') }}
+      </p>
+    </div>
+  </div>
+
+  <!-- Edit Form -->
+  <div
+    class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-2xl shadow-xl p-8 border border-pink-100 dark:border-gray-700"
+  >
+    <form
+      method="POST"
+      action="{{ url_for('edit_photo', photo_id=photo.id) }}"
+      class="space-y-6"
+    >
+      {{ form.hidden_tag() }}
+
+      <!-- Caption -->
+      <div class="space-y-2">
+        {{ form.caption.label(class="block text-sm font-medium text-gray-700
+        dark:text-gray-300") }} {{ form.caption(class="w-full px-4 py-3 border
+        border-gray-300 dark:border-gray-600 rounded-2xl focus:ring-2
+        focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-700
+        dark:text-white transition-all duration-300", rows="3",
+        placeholder="Describe this beautiful moment... 💖") }}
+      </div>
+
+      <!-- Favorite -->
+      <div
+        class="flex items-center space-x-3 p-4 bg-pink-50 dark:bg-pink-900/20 rounded-2xl border border-pink-100 dark:border-pink-800"
+      >
+        {{ form.is_favorite(class="h-5 w-5 text-pink-600 focus:ring-pink-500
+        border-gray-300 rounded transition-colors duration-300") }} {{
+        form.is_favorite.label(class="text-sm font-medium text-gray-700
+        dark:text-gray-300 cursor-pointer") }}
+        <i class="fas fa-heart text-pink-500 ml-auto"></i>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex flex-col sm:flex-row gap-4 pt-4">
+        <button
+          type="submit"
+          class="flex-1 flex justify-center items-center py-3 px-4 border border-transparent rounded-2xl shadow-lg text-lg font-medium text-white bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 transform transition-all duration-300 hover:scale-105"
+        >
+          <i class="fas fa-save mr-3"></i>
+          Update Memory
+        </button>
+
+        <a
+          href="{{ url_for('admin') }}"
+          class="flex-1 flex justify-center items-center py-3 px-4 border border-gray-300 dark:border-gray-600 rounded-2xl shadow-lg text-lg font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 transform transition-all duration-300 hover:scale-105"
+        >
+          <i class="fas fa-times mr-3"></i>
+          Cancel
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // Add animation to form elements
+    gsap.fromTo(
+      ".space-y-6 > div",
+      {
+        opacity: 0,
+        y: 20,
+      },
+      {
+        opacity: 1,
+        y: 0,
+        duration: 0.6,
+        stagger: 0.1,
+        ease: "power2.out",
+      }
+    );
+  });
+</script>
+{% endblock %}

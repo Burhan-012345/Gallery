@@ -1,0 +1,603 @@
+{% extends "base.html" %} {% block title %}Favorite Memories 💖 - Romantic Photo
+Gallery{% endblock %} {% block content %}
+<div class="container mx-auto px-4 py-8">
+  <!-- Animated Header -->
+  <div class="text-center mb-12">
+    <h1
+      class="text-5xl md:text-7xl font-bold bg-gradient-to-r from-pink-500 via-red-500 to-purple-600 bg-clip-text text-transparent mb-4"
+    >
+      <span id="typed-text"></span>
+    </h1>
+    <p class="text-xl text-gray-600 dark:text-gray-300 mb-8">
+      Your most cherished memories 💕
+    </p>
+  </div>
+
+  <!-- Search and Filters -->
+  <div
+    class="mb-8 bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-2xl p-6 shadow-xl"
+  >
+    <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
+      <!-- Search Bar -->
+      <div class="flex-1 w-full">
+        <form action="{{ url_for('search') }}" method="get" class="relative">
+          <input
+            type="text"
+            name="q"
+            value="{{ search_query or '' }}"
+            placeholder="Search favorite memories..."
+            class="w-full p-4 pl-12 rounded-xl border-2 border-pink-200 focus:border-pink-400 focus:ring-2 focus:ring-pink-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white transition-all duration-300"
+          />
+          <i
+            class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-pink-400 text-lg"
+          ></i>
+        </form>
+      </div>
+
+      <!-- Filter Buttons -->
+      <div class="flex flex-wrap gap-2">
+        <a
+          href="{{ url_for('index') }}"
+          class="px-4 py-2 rounded-full bg-pink-500 text-white hover:bg-pink-600 transition-all duration-300 transform hover:scale-105"
+        >
+          All Photos
+        </a>
+        <a
+          href="{{ url_for('favorites') }}"
+          class="px-4 py-2 rounded-full bg-rose-500 text-white hover:bg-rose-600 transition-all duration-300 transform hover:scale-105"
+        >
+          💖 Favorites
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Photo Grid -->
+  <div class="photo-grid" id="photoGrid">
+    {% if photos and photos|length > 0 %} {% for photo in photos %}
+    <div class="photo-item group" data-photo-id="{{ photo.id }}">
+      <div
+        class="photo-card relative overflow-hidden rounded-2xl shadow-2xl transform transition-all duration-500 group-hover:scale-105 group-hover:shadow-3xl cursor-pointer bg-white dark:bg-gray-800"
+        onclick="openPhotoModal({{ photo.id }})"
+      >
+        <img
+          src="{{ url_for('uploaded_file', filename=photo.filename) }}"
+          alt="{{ photo.caption or 'Our beautiful memory' }}"
+          loading="lazy"
+          class="w-full h-64 object-cover transition-transform duration-500 group-hover:scale-110"
+          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+          onload="this.nextElementSibling.style.display='none';"
+        />
+
+        <!-- Fallback if image fails to load -->
+        <div
+          class="image-fallback hidden w-full h-64 bg-gradient-to-br from-pink-100 to-purple-100 dark:from-gray-700 dark:to-purple-900 flex items-center justify-center flex-col"
+        >
+          <i class="fas fa-image text-4xl text-gray-400 mb-2"></i>
+          <span class="text-gray-500 text-sm">Image loading...</span>
+        </div>
+
+        <!-- Overlay -->
+        <div
+          class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-300 flex items-end"
+        >
+          <div
+            class="p-4 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300 w-full"
+          >
+            <div
+              class="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-xl p-4"
+            >
+              <p
+                class="text-sm text-gray-700 dark:text-gray-300 font-medium line-clamp-2"
+              >
+                {{ photo.caption or "Our special moment" }}
+              </p>
+              <div class="flex justify-between items-center mt-2">
+                <span class="text-xs text-gray-500">
+                  {{ photo.date_uploaded.strftime('%b %d, %Y') }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Favorite Button -->
+        <button
+          class="absolute top-3 right-3 favorite-btn opacity-100 transition-all duration-300 transform scale-100 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-2 rounded-full"
+          data-photo-id="{{ photo.id }}"
+          onclick="event.stopPropagation(); toggleFavorite({{ photo.id }})"
+        >
+          <i class="fas fa-heart text-xl text-red-500 drop-shadow-lg"></i>
+        </button>
+      </div>
+    </div>
+    {% endfor %} {% else %}
+    <div class="col-span-full text-center py-16">
+      <i class="fas fa-heart text-6xl text-gray-300 mb-4"></i>
+      <h3 class="text-2xl font-semibold text-gray-500 mb-2">
+        No favorite photos yet
+      </h3>
+      <p class="text-gray-400">
+        {% if search_query %}Try a different search term{% else %}Mark some
+        photos as favorites to see them here!{% endif %}
+      </p>
+      {% if current_user.is_authenticated %}
+      <a
+        href="{{ url_for('index') }}"
+        class="inline-flex items-center mt-4 px-6 py-3 bg-pink-500 text-white rounded-2xl hover:bg-pink-600 transition-all duration-300 transform hover:scale-105"
+      >
+        <i class="fas fa-images mr-2"></i>
+        Browse All Photos
+      </a>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Include the modal -->
+{% include 'includes/photo_modal.html' %} {% endblock %} {% block scripts %}
+<script>
+  // Photo data and modal management - GLOBAL VARIABLES
+  window.currentPhotos = [];
+  window.currentModalIndex = 0;
+
+  // Initialize photos data
+  function initPhotosData() {
+      window.currentPhotos = [
+          {% for photo in photos %}
+          {
+              id: {{ photo.id }},
+              filename: "{{ photo.filename }}",
+              caption: `{{ photo.caption or "This beautiful moment speaks for itself. Every second with you is a memory to cherish forever. 💖" }}`,
+              date: "{{ photo.date_uploaded.strftime('%B %d, %Y') }}",
+              is_favorite: {{ 'true' if photo.is_favorite else 'false' }},
+              url: "{{ url_for('uploaded_file', filename=photo.filename) }}"
+          }{% if not loop.last %},{% endif %}
+          {% endfor %}
+      ];
+      console.log('Favorites photos data initialized:', window.currentPhotos.length, 'photos loaded');
+  }
+
+  // Debug function to check image URLs
+  function debugImageUrls() {
+      const images = document.querySelectorAll('.photo-card img');
+      images.forEach((img, index) => {
+          console.log(`Favorite Image ${index}:`, {
+              src: img.src,
+              naturalWidth: img.naturalWidth,
+              naturalHeight: img.naturalHeight,
+              complete: img.complete
+          });
+      });
+  }
+
+  // Ensure modal functions are available
+  function ensureModalFunctions() {
+      if (typeof window.showPhotoInModal === 'undefined') {
+          console.warn('Modal functions not loaded yet');
+          return false;
+      }
+      return true;
+  }
+
+  // Hide modal loading
+  function hideModalLoading() {
+      const loading = document.getElementById('modalLoading');
+      if (loading) {
+          loading.style.opacity = '0';
+          setTimeout(() => {
+              loading.style.display = 'none';
+          }, 300);
+      }
+  }
+
+  // Open photo modal
+  function openPhotoModal(photoId) {
+      console.log('Opening modal for favorite photo:', photoId);
+
+      if (typeof window.currentPhotos === 'undefined' || window.currentPhotos.length === 0) {
+          console.error('Favorites photos data not loaded');
+          initPhotosData();
+      }
+
+      const photoIndex = window.currentPhotos.findIndex(photo => photo.id === photoId);
+      if (photoIndex === -1) {
+          console.error('Favorite photo not found:', photoId);
+          return;
+      }
+
+      window.currentModalIndex = photoIndex;
+
+      // Wait a brief moment for modal functions to be available
+      setTimeout(() => {
+          if (typeof window.showPhotoInModal === 'function') {
+              window.showPhotoInModal(photoIndex);
+          } else {
+              console.error('Modal functions not available');
+              return;
+          }
+
+          const modal = document.getElementById('photoModal');
+          const content = document.getElementById('modalContent');
+
+          if (!modal) {
+              console.error('Modal element not found');
+              return;
+          }
+
+          modal.classList.remove('hidden');
+
+          // Reset loading
+          const loading = document.getElementById('modalLoading');
+          if (loading) {
+              loading.style.display = 'flex';
+              loading.style.opacity = '1';
+          }
+
+          // Animate modal entrance
+          setTimeout(() => {
+              if (content) {
+                  content.classList.remove('scale-95', 'opacity-0');
+                  content.classList.add('scale-100', 'opacity-100');
+              }
+              document.body.style.overflow = 'hidden';
+          }, 10);
+
+          // Add keyboard navigation
+          document.addEventListener('keydown', handleModalKeyboard);
+      }, 50);
+  }
+
+  // Close photo modal
+  function closePhotoModal() {
+      const modal = document.getElementById('photoModal');
+      const content = document.getElementById('modalContent');
+
+      if (content) {
+          content.classList.remove('scale-100', 'opacity-100');
+          content.classList.add('scale-95', 'opacity-0');
+      }
+
+      setTimeout(() => {
+          if (modal) {
+              modal.classList.add('hidden');
+          }
+          document.body.style.overflow = '';
+          document.removeEventListener('keydown', handleModalKeyboard);
+      }, 300);
+  }
+
+  // Navigate between photos in modal
+  function navigateModal(direction) {
+      const newIndex = window.currentModalIndex + direction;
+      if (newIndex >= 0 && newIndex < window.currentPhotos.length) {
+          window.currentModalIndex = newIndex;
+
+          // Show loading during navigation
+          const loading = document.getElementById('modalLoading');
+          if (loading) {
+              loading.style.display = 'flex';
+              loading.style.opacity = '1';
+          }
+
+          if (typeof window.showPhotoInModal === 'function') {
+              window.showPhotoInModal(newIndex);
+          }
+      }
+  }
+
+  // Keyboard navigation
+  function handleModalKeyboard(event) {
+      switch(event.key) {
+          case 'Escape':
+              closePhotoModal();
+              break;
+          case 'ArrowLeft':
+              navigateModal(-1);
+              break;
+          case 'ArrowRight':
+              navigateModal(1);
+              break;
+      }
+  }
+
+  // Toggle favorite from modal
+  async function toggleModalFavorite(photoId) {
+      try {
+          const response = await fetch(`/toggle_favorite/${photoId}`, {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+              }
+          });
+
+          const data = await response.json();
+          const favoriteBtn = document.getElementById('modalFavorite');
+          if (favoriteBtn) {
+              const favoriteIcon = favoriteBtn.querySelector('i');
+              if (data.is_favorite) {
+                  favoriteIcon.className = 'fas fa-heart text-xl text-red-500';
+                  // Add heart animation
+                  favoriteBtn.classList.add('animate-pulse');
+                  setTimeout(() => favoriteBtn.classList.remove('animate-pulse'), 600);
+              } else {
+                  favoriteIcon.className = 'fas fa-heart text-xl text-gray-400';
+                  // If unfavorited from favorites page, remove the photo from view
+                  setTimeout(() => {
+                      const photoElement = document.querySelector(`[data-photo-id="${photoId}"]`);
+                      if (photoElement) {
+                          photoElement.style.opacity = '0';
+                          setTimeout(() => {
+                              photoElement.remove();
+                              // Check if no photos left
+                              const remainingPhotos = document.querySelectorAll('.photo-item');
+                              if (remainingPhotos.length === 0) {
+                                  location.reload(); // Reload to show empty state
+                              }
+                          }, 300);
+                      }
+                  }, 1000);
+              }
+          }
+
+          // Update the photo data
+          const photoIndex = window.currentPhotos.findIndex(photo => photo.id === photoId);
+          if (photoIndex !== -1) {
+              window.currentPhotos[photoIndex].is_favorite = data.is_favorite;
+          }
+
+          // Update the grid favorite button
+          const gridFavoriteBtn = document.querySelector(`[data-photo-id="${photoId}"] .favorite-btn`);
+          if (gridFavoriteBtn) {
+              const gridIcon = gridFavoriteBtn.querySelector('i');
+              if (data.is_favorite) {
+                  gridIcon.classList.add('text-red-500');
+              } else {
+                  gridIcon.classList.remove('text-red-500');
+                  gridIcon.classList.add('text-gray-400');
+              }
+          }
+      } catch (error) {
+          console.error('Error toggling favorite:', error);
+      }
+  }
+
+  // Typed.js Animation
+  document.addEventListener('DOMContentLoaded', function() {
+      new Typed('#typed-text', {
+          strings: ['Favorite Memories', 'Cherished Moments', 'Precious Times', 'Special Memories', 'Loved Moments'],
+          typeSpeed: 50,
+          backSpeed: 30,
+          backDelay: 2000,
+          loop: true,
+          showCursor: true,
+          cursorChar: '💖'
+      });
+  });
+
+  // Toggle favorite from grid
+  async function toggleFavorite(photoId) {
+      try {
+          const response = await fetch(`/toggle_favorite/${photoId}`, {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+              }
+          });
+
+          const data = await response.json();
+          const button = document.querySelector(`[data-photo-id="${photoId}"] .favorite-btn`);
+          if (button) {
+              const icon = button.querySelector('i');
+              if (data.is_favorite) {
+                  icon.classList.add('text-red-500');
+                  // Add heart animation
+                  button.classList.add('animate-pulse');
+                  setTimeout(() => button.classList.remove('animate-pulse'), 600);
+              } else {
+                  icon.classList.remove('text-red-500');
+                  icon.classList.add('text-gray-400');
+                  // Remove photo from favorites page with animation
+                  setTimeout(() => {
+                      const photoElement = document.querySelector(`[data-photo-id="${photoId}"]`);
+                      if (photoElement) {
+                          photoElement.style.opacity = '0';
+                          setTimeout(() => {
+                              photoElement.remove();
+                              // Check if no photos left
+                              const remainingPhotos = document.querySelectorAll('.photo-item');
+                              if (remainingPhotos.length === 0) {
+                                  location.reload(); // Reload to show empty state
+                              }
+                          }, 300);
+                      }
+                  }, 1000);
+              }
+          }
+
+          // Update modal data if open
+          const photoIndex = window.currentPhotos.findIndex(photo => photo.id === photoId);
+          if (photoIndex !== -1) {
+              window.currentPhotos[photoIndex].is_favorite = data.is_favorite;
+          }
+      } catch (error) {
+          console.error('Error toggling favorite:', error);
+      }
+  }
+
+  // Check image loading status
+  function checkImageLoading() {
+      const images = document.querySelectorAll('.photo-card img');
+      let loadedCount = 0;
+      let errorCount = 0;
+
+      images.forEach(img => {
+          if (img.complete) {
+              if (img.naturalWidth === 0) {
+                  errorCount++;
+                  console.error('Favorite image failed to load:', img.src);
+                  // Show fallback
+                  const fallback = img.nextElementSibling;
+                  if (fallback && fallback.classList.contains('image-fallback')) {
+                      fallback.style.display = 'flex';
+                  }
+              } else {
+                  loadedCount++;
+              }
+          }
+      });
+
+      console.log(`Favorite Images: ${loadedCount} loaded, ${errorCount} failed`);
+  }
+
+  // Initialize when page loads
+  document.addEventListener('DOMContentLoaded', function() {
+      initPhotosData();
+
+      // Make functions globally available
+      window.closePhotoModal = closePhotoModal;
+      window.openPhotoModal = openPhotoModal;
+      window.toggleFavorite = toggleFavorite;
+      window.navigateModal = navigateModal;
+      window.toggleModalFavorite = toggleModalFavorite;
+      window.hideModalLoading = hideModalLoading;
+
+      // Check image loading after a delay
+      setTimeout(() => {
+          checkImageLoading();
+          debugImageUrls();
+      }, 1000);
+  });
+</script>
+
+<style>
+  .photo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 2rem;
+    padding: 1rem 0;
+  }
+
+  .photo-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: 1rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    background: white;
+  }
+
+  .photo-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  }
+
+  .photo-card img {
+    transition: transform 0.5s ease;
+    display: block;
+  }
+
+  .photo-card:hover img {
+    transform: scale(1.05);
+  }
+
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .animate-pulse {
+    animation: pulse 0.6s ease-in-out;
+  }
+
+  .image-fallback {
+    display: none;
+  }
+
+  @keyframes pulse {
+    0%,
+    100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.2);
+    }
+  }
+
+  /* Modal Styles */
+  #photoModal {
+    z-index: 10000;
+  }
+
+  #modalContent {
+    z-index: 10001;
+  }
+
+  .backdrop-blur-sm {
+    backdrop-filter: blur(4px);
+  }
+
+  /* Custom scrollbar for modal */
+  .overflow-y-auto::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .overflow-y-auto::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 3px;
+  }
+
+  .overflow-y-auto::-webkit-scrollbar-thumb {
+    background: #ec4899;
+    border-radius: 3px;
+  }
+
+  .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+    background: #db2777;
+  }
+
+  .dark .overflow-y-auto::-webkit-scrollbar-track {
+    background: #374151;
+  }
+
+  .dark .overflow-y-auto::-webkit-scrollbar-thumb {
+    background: #ec4899;
+  }
+
+  .dark .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+    background: #db2777;
+  }
+
+  /* Mobile responsiveness */
+  @media (max-width: 768px) {
+    .photo-grid {
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 1rem;
+    }
+
+    #modalContent {
+      flex-direction: column;
+      max-height: 95vh;
+    }
+
+    #modalContent > div:first-child {
+      height: 50%;
+      min-height: 300px;
+    }
+
+    #modalContent > div:last-child {
+      height: 50%;
+      width: 100%;
+      border-left: none;
+      border-top: 1px solid #fecdd3;
+    }
+
+    .dark #modalContent > div:last-child {
+      border-top-color: #374151;
+    }
+  }
+</style>
+{% endblock %}

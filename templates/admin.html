@@ -1,0 +1,466 @@
+{% extends "base.html" %} {% block title %}Admin Dashboard - Our Memories{%
+endblock %} {% block content %}
+<div class="container mx-auto px-4 py-8">
+  <!-- Header -->
+  <div class="text-center mb-12">
+    <h1
+      class="text-4xl md:text-5xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent mb-4"
+    >
+      Admin Dashboard
+    </h1>
+    <p class="text-xl text-gray-600 dark:text-gray-300">
+      Manage our beautiful memories together 💖
+    </p>
+  </div>
+
+  <!-- Statistics Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+    <div
+      class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-2xl p-6 shadow-xl border border-pink-100 dark:border-gray-700"
+    >
+      <div class="flex items-center">
+        <div class="p-3 rounded-full bg-pink-100 dark:bg-pink-900/30 mr-4">
+          <i class="fas fa-images text-2xl text-pink-600"></i>
+        </div>
+        <div>
+          <p class="text-sm font-medium text-gray-600 dark:text-gray-400">
+            Total Photos
+          </p>
+          <p class="text-3xl font-bold text-gray-900 dark:text-white">
+            {{ stats.total_photos }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-2xl p-6 shadow-xl border border-purple-100 dark:border-gray-700"
+    >
+      <div class="flex items-center">
+        <div class="p-3 rounded-full bg-purple-100 dark:bg-purple-900/30 mr-4">
+          <i class="fas fa-heart text-2xl text-purple-600"></i>
+        </div>
+        <div>
+          <p class="text-sm font-medium text-gray-600 dark:text-gray-400">
+            Favorites
+          </p>
+          <p class="text-3xl font-bold text-gray-900 dark:text-white">
+            {{ stats.favorites }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-2xl p-6 shadow-xl border border-blue-100 dark:border-gray-700"
+    >
+      <div class="flex items-center">
+        <div class="p-3 rounded-full bg-blue-100 dark:bg-blue-900/30 mr-4">
+          <i class="fas fa-calendar-plus text-2xl text-blue-600"></i>
+        </div>
+        <div>
+          <p class="text-sm font-medium text-gray-600 dark:text-gray-400">
+            This Week
+          </p>
+          <p class="text-3xl font-bold text-gray-900 dark:text-white">
+            {{ stats.recent_uploads }}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="flex flex-wrap gap-4 mb-8 justify-center">
+    <a
+      href="{{ url_for('upload') }}"
+      class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-600 text-white font-semibold rounded-2xl shadow-lg transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
+    >
+      <i class="fas fa-cloud-upload-alt mr-3"></i>
+      Upload New Photo
+    </a>
+
+    <a
+      href="{{ url_for('index') }}"
+      class="inline-flex items-center px-6 py-3 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold rounded-2xl border border-pink-200 dark:border-gray-600 shadow-lg transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
+    >
+      <i class="fas fa-eye mr-3"></i>
+      View Gallery
+    </a>
+  </div>
+
+  <!-- Photos Table -->
+  <div
+    class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-2xl shadow-xl overflow-hidden"
+  >
+    <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+      <h2 class="text-2xl font-semibold text-gray-800 dark:text-white">
+        All Photos
+      </h2>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead class="bg-gray-50 dark:bg-gray-700/50">
+          <tr>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+            >
+              Photo
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+            >
+              Caption
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+            >
+              Date
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+            >
+              Actions
+            </th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+          {% for photo in photos %}
+          <tr
+            class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200"
+          >
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="flex items-center">
+                <div
+                  class="h-16 w-16 flex-shrink-0 cursor-pointer"
+                  onclick="openPhotoModal({{ photo.id }})"
+                >
+                  <img
+                    class="h-16 w-16 rounded-lg object-cover shadow-sm transition-transform duration-300 hover:scale-105"
+                    src="{{ url_for('uploaded_file', filename=photo.filename) }}"
+                    alt="{{ photo.caption }}"
+                  />
+                </div>
+              </div>
+            </td>
+            <td class="px-6 py-4">
+              <div
+                class="text-sm font-medium text-gray-900 dark:text-white max-w-xs truncate"
+              >
+                {{ photo.caption or "No caption" }}
+              </div>
+            </td>
+            <td
+              class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white"
+            >
+              {{ photo.date_uploaded.strftime('%Y-%m-%d') }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+              <div class="flex space-x-2">
+                <a
+                  href="{{ url_for('edit_photo', photo_id=photo.id) }}"
+                  class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 transition-colors duration-200 transform hover:scale-110"
+                  title="Edit Photo"
+                >
+                  <i class="fas fa-edit"></i>
+                </a>
+                <form
+                  action="{{ url_for('delete_photo', photo_id=photo.id) }}"
+                  method="POST"
+                  onsubmit="return confirm('Are you sure you want to delete this memory? This action cannot be undone.');"
+                  class="inline"
+                >
+                  <button
+                    type="submit"
+                    class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 transition-colors duration-200 transform hover:scale-110"
+                    title="Delete Photo"
+                  >
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </form>
+                <button
+                  onclick="openPhotoModal({{ photo.id }})"
+                  class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300 transition-colors duration-200 transform hover:scale-110"
+                  title="View Photo"
+                >
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="4" class="px-6 py-12 text-center">
+              <div class="text-gray-500 dark:text-gray-400">
+                <i class="fas fa-images text-4xl mb-4 text-gray-300"></i>
+                <p class="text-lg font-medium">No photos uploaded yet</p>
+                <p class="mt-2">Start by uploading your first memory!</p>
+                <a
+                  href="{{ url_for('upload') }}"
+                  class="inline-flex items-center mt-4 px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition-colors duration-300"
+                >
+                  <i class="fas fa-cloud-upload-alt mr-2"></i>
+                  Upload Photo
+                </a>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Include the modal -->
+{% include 'includes/photo_modal.html' %}
+
+<script>
+  // Photo data and modal management
+  let currentPhotos = [];
+  let currentModalIndex = 0;
+
+  // Initialize photos data for admin page
+  function initAdminPhotosData() {
+    currentPhotos = [
+      {% for photo in photos %}
+      {
+        id: {{ photo.id }},
+        filename: "{{ photo.filename }}",
+        caption: `{{ photo.caption or "This beautiful moment speaks for itself. Every second with you is a memory to cherish forever. 💖" }}`,
+        date: "{{ photo.date_uploaded.strftime('%B %d, %Y') }}",
+        is_favorite: {{ 'true' if photo.is_favorite else 'false' }},
+        url: "{{ url_for('uploaded_file', filename=photo.filename) }}"
+      }{% if not loop.last %},{% endif %}
+      {% endfor %}
+    ];
+  }
+
+  // Hide modal loading
+  function hideModalLoading() {
+    const loading = document.getElementById('modalLoading');
+    if (loading) {
+      loading.style.opacity = '0';
+      setTimeout(() => {
+        loading.style.display = 'none';
+      }, 300);
+    }
+  }
+
+  // Open photo modal
+  function openPhotoModal(photoId) {
+    const photoIndex = currentPhotos.findIndex(photo => photo.id === photoId);
+    if (photoIndex === -1) return;
+
+    currentModalIndex = photoIndex;
+    showPhotoInModal(photoIndex);
+
+    const modal = document.getElementById('photoModal');
+    const content = document.getElementById('modalContent');
+
+    modal.classList.remove('hidden');
+
+    // Reset loading
+    const loading = document.getElementById('modalLoading');
+    loading.style.display = 'flex';
+    loading.style.opacity = '1';
+
+    // Animate modal entrance
+    setTimeout(() => {
+      content.classList.remove('scale-95', 'opacity-0');
+      content.classList.add('scale-100', 'opacity-100');
+      document.body.style.overflow = 'hidden';
+    }, 10);
+
+    // Add keyboard navigation
+    document.addEventListener('keydown', handleModalKeyboard);
+  }
+
+  // Close photo modal
+  function closePhotoModal() {
+    const modal = document.getElementById('photoModal');
+    const content = document.getElementById('modalContent');
+
+    content.classList.remove('scale-100', 'opacity-100');
+    content.classList.add('scale-95', 'opacity-0');
+
+    setTimeout(() => {
+      modal.classList.add('hidden');
+      document.body.style.overflow = '';
+      document.removeEventListener('keydown', handleModalKeyboard);
+    }, 300);
+  }
+
+  // Show photo in modal
+  function showPhotoInModal(index) {
+    if (index < 0 || index >= currentPhotos.length) return;
+
+    const photo = currentPhotos[index];
+
+    // Update image
+    const image = document.getElementById('modalImage');
+    image.src = photo.url;
+    image.alt = photo.caption;
+
+    // Update details
+    document.getElementById('modalCaption').textContent = photo.caption;
+    document.getElementById('modalDate').textContent = photo.date;
+
+    // Update favorite button
+    const favoriteBtn = document.getElementById('modalFavorite');
+    const favoriteIcon = favoriteBtn.querySelector('i');
+    favoriteIcon.className = photo.is_favorite ? 'fas fa-heart text-xl text-red-500' : 'fas fa-heart text-xl text-gray-400';
+    favoriteBtn.onclick = () => toggleModalFavorite(photo.id);
+
+    // Update navigation
+    updateModalNavigation();
+  }
+
+  // Update modal navigation buttons
+  function updateModalNavigation() {
+    const prevBtn = document.getElementById('modalPrev');
+    const nextBtn = document.getElementById('modalNext');
+
+    prevBtn.style.display = currentModalIndex > 0 ? 'block' : 'none';
+    nextBtn.style.display = currentModalIndex < currentPhotos.length - 1 ? 'block' : 'none';
+
+    prevBtn.onclick = currentModalIndex > 0 ? () => navigateModal(-1) : null;
+    nextBtn.onclick = currentModalIndex < currentPhotos.length - 1 ? () => navigateModal(1) : null;
+  }
+
+  // Navigate between photos in modal
+  function navigateModal(direction) {
+    const newIndex = currentModalIndex + direction;
+    if (newIndex >= 0 && newIndex < currentPhotos.length) {
+      currentModalIndex = newIndex;
+
+      // Show loading during navigation
+      const loading = document.getElementById('modalLoading');
+      loading.style.display = 'flex';
+      loading.style.opacity = '1';
+
+      showPhotoInModal(newIndex);
+    }
+  }
+
+  // Keyboard navigation
+  function handleModalKeyboard(event) {
+    switch(event.key) {
+      case 'Escape':
+        closePhotoModal();
+        break;
+      case 'ArrowLeft':
+        navigateModal(-1);
+        break;
+      case 'ArrowRight':
+        navigateModal(1);
+        break;
+    }
+  }
+
+  // Toggle favorite from modal
+  async function toggleModalFavorite(photoId) {
+    try {
+      const response = await fetch(`/toggle_favorite/${photoId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      const data = await response.json();
+      const favoriteBtn = document.getElementById('modalFavorite');
+      const favoriteIcon = favoriteBtn.querySelector('i');
+
+      if (data.is_favorite) {
+        favoriteIcon.className = 'fas fa-heart text-xl text-red-500';
+        // Add heart animation
+        favoriteBtn.classList.add('animate-pulse');
+        setTimeout(() => favoriteBtn.classList.remove('animate-pulse'), 600);
+      } else {
+        favoriteIcon.className = 'fas fa-heart text-xl text-gray-400';
+      }
+
+      // Update the photo data
+      const photoIndex = currentPhotos.findIndex(photo => photo.id === photoId);
+      if (photoIndex !== -1) {
+        currentPhotos[photoIndex].is_favorite = data.is_favorite;
+      }
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+    }
+  }
+
+  // Add smooth animations to table rows
+  document.addEventListener("DOMContentLoaded", function () {
+    initAdminPhotosData();
+
+    gsap.utils.toArray("tbody tr").forEach((row, index) => {
+      gsap.fromTo(
+        row,
+        {
+          opacity: 0,
+          x: -50,
+        },
+        {
+          opacity: 1,
+          x: 0,
+          duration: 0.6,
+          delay: index * 0.1,
+          ease: "power2.out",
+        }
+      );
+    });
+  });
+</script>
+
+<style>
+  /* Table row hover effects */
+  tbody tr {
+    transition: all 0.3s ease;
+  }
+
+  tbody tr:hover {
+    transform: translateX(4px);
+  }
+
+  /* Image hover effects */
+  .h-16.w-16 img {
+    transition: transform 0.3s ease;
+  }
+
+  .h-16.w-16:hover img {
+    transform: scale(1.1);
+  }
+
+  /* Action buttons */
+  .flex.space-x-2 a,
+  .flex.space-x-2 button {
+    transition: all 0.3s ease;
+  }
+
+  /* Modal styles */
+  #photoModal {
+    z-index: 10000;
+  }
+
+  #modalContent {
+    z-index: 10001;
+  }
+
+  .animate-pulse {
+    animation: pulse 0.6s ease-in-out;
+  }
+
+  @keyframes pulse {
+    0%,
+    100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.2);
+    }
+  }
+</style>
+{% endblock %}

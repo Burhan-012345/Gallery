@@ -1,0 +1,220 @@
+{% extends "base.html" %} {% block title %}Upload Photo - Our Memories{%
+endblock %} {% block content %}
+<div class="container mx-auto px-4 py-8 max-w-2xl">
+  <!-- Header -->
+  <div class="text-center mb-8">
+    <h1
+      class="text-4xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent mb-4"
+    >
+      Upload New Memory
+    </h1>
+    <p class="text-lg text-gray-600 dark:text-gray-300">
+      Share a beautiful moment from our journey together 💕
+    </p>
+  </div>
+
+  <!-- Upload Form -->
+  <div
+    class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-2xl shadow-xl p-8 border border-pink-100 dark:border-gray-700"
+  >
+    <form
+      method="POST"
+      action="{{ url_for('upload') }}"
+      enctype="multipart/form-data"
+      class="space-y-6"
+    >
+      {{ form.hidden_tag() }}
+
+      <!-- Photo Upload -->
+      <div class="space-y-2">
+        <label
+          class="block text-sm font-medium text-gray-700 dark:text-gray-300"
+        >
+          <i class="fas fa-camera mr-2 text-pink-500"></i>
+          Choose Photo *
+        </label>
+
+        <!-- Drag & Drop Area -->
+        <div
+          id="dropZone"
+          class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed border-pink-300 dark:border-pink-600 rounded-2xl transition-all duration-300 hover:border-pink-400 hover:bg-pink-50/50 dark:hover:bg-pink-900/20"
+        >
+          <div class="space-y-2 text-center">
+            <i
+              class="fas fa-cloud-upload-alt text-4xl text-pink-400 mx-auto"
+            ></i>
+
+            <div class="flex text-sm text-gray-600 dark:text-gray-400">
+              <label
+                for="image"
+                class="relative cursor-pointer bg-white dark:bg-gray-800 rounded-md font-medium text-pink-600 hover:text-pink-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-pink-500 transition-colors duration-300"
+              >
+                <span>Upload a file</span>
+                {{ form.image(class="sr-only", id="image", accept="image/*") }}
+              </label>
+              <p class="pl-1">or drag and drop</p>
+            </div>
+
+            <p class="text-xs text-gray-500 dark:text-gray-400">
+              PNG, JPG, GIF, WebP up to 16MB
+            </p>
+
+            <!-- Preview Container -->
+            <div id="previewContainer" class="hidden mt-4">
+              <img
+                id="imagePreview"
+                class="mx-auto h-32 rounded-lg shadow-lg object-cover"
+              />
+              <p
+                id="fileName"
+                class="text-sm font-medium text-gray-900 dark:text-white mt-2"
+              ></p>
+            </div>
+          </div>
+        </div>
+
+        {% if form.image.errors %}
+        <div class="text-red-600 text-sm mt-1">
+          {% for error in form.image.errors %}
+          <p><i class="fas fa-exclamation-circle mr-1"></i> {{ error }}</p>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Caption -->
+      <div class="space-y-2">
+        {{ form.caption.label(class="block text-sm font-medium text-gray-700
+        dark:text-gray-300") }} {{ form.caption(class="w-full px-4 py-3 border
+        border-gray-300 dark:border-gray-600 rounded-2xl focus:ring-2
+        focus:ring-pink-500 focus:border-pink-500 dark:bg-gray-700
+        dark:text-white transition-all duration-300", rows="3",
+        placeholder="Describe this beautiful moment... 💖") }}
+        <p class="text-xs text-gray-500 dark:text-gray-400">
+          Share what makes this memory special
+        </p>
+      </div>
+
+      <!-- Submit Button -->
+      <div class="pt-4">
+        <button
+          type="submit"
+          class="w-full flex justify-center py-4 px-4 border border-transparent rounded-2xl shadow-lg text-lg font-medium text-white bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 transform transition-all duration-300 hover:scale-105"
+        >
+          <i class="fas fa-heart mr-3"></i>
+          Save Our Memory
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="text-center mt-8">
+    <a
+      href="{{ url_for('admin') }}"
+      class="inline-flex items-center text-pink-600 hover:text-pink-500 dark:text-pink-400 dark:hover:text-pink-300 transition-colors duration-300"
+    >
+      <i class="fas fa-arrow-left mr-2"></i>
+      Back to Dashboard
+    </a>
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const dropZone = document.getElementById("dropZone");
+    const fileInput = document.getElementById("image");
+    const previewContainer = document.getElementById("previewContainer");
+    const imagePreview = document.getElementById("imagePreview");
+    const fileName = document.getElementById("fileName");
+
+    // Handle drag and drop
+    ["dragenter", "dragover", "dragleave", "drop"].forEach((eventName) => {
+      dropZone.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    ["dragenter", "dragover"].forEach((eventName) => {
+      dropZone.addEventListener(eventName, highlight, false);
+    });
+
+    ["dragleave", "drop"].forEach((eventName) => {
+      dropZone.addEventListener(eventName, unhighlight, false);
+    });
+
+    function highlight() {
+      dropZone.classList.add(
+        "border-pink-500",
+        "bg-pink-100/50",
+        "dark:bg-pink-900/30"
+      );
+    }
+
+    function unhighlight() {
+      dropZone.classList.remove(
+        "border-pink-500",
+        "bg-pink-100/50",
+        "dark:bg-pink-900/30"
+      );
+    }
+
+    // Handle file drop
+    dropZone.addEventListener("drop", handleDrop, false);
+
+    function handleDrop(e) {
+      const dt = e.dataTransfer;
+      const files = dt.files;
+      fileInput.files = files;
+      handleFiles(files);
+    }
+
+    // Handle file input change
+    fileInput.addEventListener("change", function () {
+      handleFiles(this.files);
+    });
+
+    function handleFiles(files) {
+      if (files.length > 0) {
+        const file = files[0];
+
+        // Update file name
+        fileName.textContent = file.name;
+
+        // Create preview
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          imagePreview.src = e.target.result;
+          previewContainer.classList.remove("hidden");
+
+          // Add success animation
+          dropZone.classList.add("border-green-400");
+          setTimeout(() => {
+            dropZone.classList.remove("border-green-400");
+          }, 2000);
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    // Click drop zone to trigger file input
+    dropZone.addEventListener("click", function () {
+      fileInput.click();
+    });
+  });
+</script>
+
+<style>
+  #dropZone {
+    transition: all 0.3s ease;
+  }
+
+  #dropZone.drag-over {
+    border-color: #ec4899;
+    background-color: rgba(236, 72, 153, 0.1);
+  }
+</style>
+{% endblock %}

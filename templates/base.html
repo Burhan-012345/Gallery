@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}Our Romantic Memories 💖{% endblock %}</title>
+
+    <!-- PWA Manifest -->
+    <link
+      rel="manifest"
+      href="{{ url_for('static', filename='manifest.json') }}"
+    />
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Custom CSS -->
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/styles.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/animations.css') }}"
+    />
+
+    <!-- Font Awesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
+    <!-- Favicon -->
+    <link
+      rel="icon"
+      href="{{ url_for('static', filename='icons/favicon.ico') }}"
+    />
+
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#ec4899" />
+
+    {% block extra_head %}{% endblock %}
+  </head>
+  <body
+    class="min-h-screen bg-gradient-to-br from-pink-50 via-rose-50 to-purple-50 dark:from-gray-900 dark:via-purple-900 dark:to-pink-900 transition-colors duration-500"
+  >
+    <!-- Particles Background -->
+    <div id="particles-js" class="fixed inset-0 z-0"></div>
+
+    <!-- Header -->
+    {% include 'includes/header.html' %}
+
+    <!-- Flash Messages -->
+    <div class="container mx-auto px-4 mt-4">
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %} {% for category, message in messages %}
+      <div
+        class="alert alert-{{ category }} mb-4 p-4 rounded-lg shadow-lg transform transition-all duration-300 {% if category == 'success' %}bg-green-100 border-green-400 text-green-700{% elif category == 'error' %}bg-red-100 border-red-400 text-red-700{% else %}bg-blue-100 border-blue-400 text-blue-700{% endif %}"
+      >
+        {{ message }}
+      </div>
+      {% endfor %} {% endif %} {% endwith %}
+    </div>
+
+    <!-- Main Content -->
+    <main class="relative z-10">{% block content %}{% endblock %}</main>
+
+    <!-- Secret Login Trigger -->
+    <div
+      id="secretLoginTrigger"
+      class="fixed bottom-4 right-4 w-12 h-12 rounded-full bg-pink-500/20 backdrop-blur-sm border border-pink-300/30 cursor-pointer z-50 flex items-center justify-center transition-all duration-300 hover:bg-pink-500/30 hover:scale-110 shadow-lg"
+      title="Secret Access"
+    >
+      <i class="fas fa-lock text-pink-600 text-base"></i>
+    </div>
+
+    <!-- Mobile Secret Areas -->
+    <div
+      id="mobileSecretLeft"
+      class="fixed left-0 top-1/2 w-16 h-16 -translate-y-1/2 z-40 opacity-0"
+    ></div>
+    <div
+      id="mobileSecretRight"
+      class="fixed right-0 top-1/2 w-16 h-16 -translate-y-1/2 z-40 opacity-0"
+    ></div>
+    <div
+      id="mobileSecretBottom"
+      class="fixed bottom-0 left-1/2 w-16 h-16 -translate-x-1/2 z-40 opacity-0"
+    ></div>
+
+    <!-- JavaScript Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/typed.js@2.0.12"></script>
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+
+    <!-- Custom JavaScript -->
+    <script src="{{ url_for('static', filename='js/particles.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/animations.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+    {% block scripts %}{% endblock %}
+
+    <!-- Service Worker Registration -->
+    <script>
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker
+          .register('{{ url_for("static", filename="js/service-worker.js") }}')
+          .then(function (registration) {
+            console.log(
+              "Service Worker registered with scope:",
+              registration.scope
+            );
+          })
+          .catch(function (error) {
+            console.log("Service Worker registration failed:", error);
+          });
+      }
+
+      // Secret login access
+      document.addEventListener("DOMContentLoaded", function () {
+        const secretTrigger = document.getElementById("secretLoginTrigger");
+        const mobileSecretLeft = document.getElementById("mobileSecretLeft");
+        const mobileSecretRight = document.getElementById("mobileSecretRight");
+        const mobileSecretBottom =
+          document.getElementById("mobileSecretBottom");
+
+        let clickCount = 0;
+        let clickTimer = null;
+        let shakeCount = 0;
+        let lastShakeTime = 0;
+
+        // Floating button triple click
+        secretTrigger.addEventListener("click", function () {
+          clickCount++;
+
+          if (clickCount === 1) {
+            // First click - show hint
+            secretTrigger.innerHTML =
+              '<i class="fas fa-heart text-pink-600 text-base"></i>';
+            secretTrigger.title = "One more click...";
+
+            // Reset after 2 seconds
+            clickTimer = setTimeout(() => {
+              clickCount = 0;
+              secretTrigger.innerHTML =
+                '<i class="fas fa-lock text-pink-600 text-base"></i>';
+              secretTrigger.title = "Secret Access";
+            }, 2000);
+          } else if (clickCount === 2) {
+            // Second click - show another hint
+            clearTimeout(clickTimer);
+            secretTrigger.innerHTML =
+              '<i class="fas fa-star text-pink-600 text-base"></i>';
+            secretTrigger.title = "Almost there...";
+
+            clickTimer = setTimeout(() => {
+              clickCount = 0;
+              secretTrigger.innerHTML =
+                '<i class="fas fa-lock text-pink-600 text-base"></i>';
+              secretTrigger.title = "Secret Access";
+            }, 2000);
+          } else if (clickCount === 3) {
+            // Third click - redirect to login
+            clearTimeout(clickTimer);
+            window.location.href = '{{ url_for("login") }}';
+          }
+        });
+
+        // Mobile secret area taps
+        function setupMobileSecretArea(element, secretType) {
+          let tapCount = 0;
+          let tapTimer = null;
+
+          element.addEventListener("click", function () {
+            tapCount++;
+
+            if (tapCount === 1) {
+              tapTimer = setTimeout(() => {
+                tapCount = 0;
+              }, 1000);
+            } else if (tapCount === 3) {
+              clearTimeout(tapTimer);
+              // Show visual feedback
+              element.style.backgroundColor = "rgba(236, 72, 153, 0.3)";
+              setTimeout(() => {
+                element.style.backgroundColor = "transparent";
+              }, 300);
+
+              if (secretType === "left") {
+                showMobileHint("Left side triple-tap detected!");
+              } else if (secretType === "right") {
+                showMobileHint("Right side triple-tap detected!");
+              } else if (secretType === "bottom") {
+                showMobileHint("Bottom center triple-tap detected!");
+              }
+
+              setTimeout(() => {
+                window.location.href = '{{ url_for("login") }}';
+              }, 1000);
+            }
+          });
+        }
+
+        // Setup mobile secret areas
+        setupMobileSecretArea(mobileSecretLeft, "left");
+        setupMobileSecretArea(mobileSecretRight, "right");
+        setupMobileSecretArea(mobileSecretBottom, "bottom");
+
+        // Swipe gestures
+        let startX = null;
+        let startY = null;
+
+        document.addEventListener("touchstart", function (e) {
+          startX = e.touches[0].clientX;
+          startY = e.touches[0].clientY;
+        });
+
+        document.addEventListener("touchend", function (e) {
+          if (!startX || !startY) return;
+
+          const endX = e.changedTouches[0].clientX;
+          const endY = e.changedTouches[0].clientY;
+
+          const diffX = startX - endX;
+          const diffY = startY - endY;
+
+          // Detect "L" shape swipe (down then right, or right then down)
+          if (Math.abs(diffX) > 50 && Math.abs(diffY) > 50) {
+            if ((diffY > 0 && diffX > 0) || (diffX > 0 && diffY > 0)) {
+              showMobileHint("L-shape swipe detected!");
+              setTimeout(() => {
+                window.location.href = '{{ url_for("login") }}';
+              }, 800);
+            }
+          }
+
+          startX = null;
+          startY = null;
+        });
+
+        // Shake to login
+        if (window.DeviceMotionEvent) {
+          let lastAcceleration = { x: null, y: null, z: null };
+
+          window.addEventListener("devicemotion", function (e) {
+            const acceleration = e.accelerationIncludingGravity;
+            if (!lastAcceleration.x) {
+              lastAcceleration = {
+                x: acceleration.x,
+                y: acceleration.y,
+                z: acceleration.z,
+              };
+              return;
+            }
+
+            const deltaX = Math.abs(acceleration.x - lastAcceleration.x);
+            const deltaY = Math.abs(acceleration.y - lastAcceleration.y);
+            const deltaZ = Math.abs(acceleration.z - lastAcceleration.z);
+
+            // Check if it's a shake (high delta values)
+            if (
+              (deltaX > 15 || deltaY > 15 || deltaZ > 15) &&
+              Date.now() - lastShakeTime > 1000
+            ) {
+              shakeCount++;
+              lastShakeTime = Date.now();
+
+              if (shakeCount >= 3) {
+                showMobileHint("Shake detected!");
+                setTimeout(() => {
+                  window.location.href = '{{ url_for("login") }}';
+                }, 800);
+                shakeCount = 0;
+              }
+            }
+
+            lastAcceleration = {
+              x: acceleration.x,
+              y: acceleration.y,
+              z: acceleration.z,
+            };
+          });
+        }
+
+        // Triple tap on header logo (mobile friendly)
+        const headerLogo = document.querySelector(".header-logo");
+        if (headerLogo) {
+          let logoTapCount = 0;
+          let logoTapTimer = null;
+
+          headerLogo.addEventListener("click", function () {
+            logoTapCount++;
+
+            if (logoTapCount === 1) {
+              logoTapTimer = setTimeout(() => {
+                logoTapCount = 0;
+              }, 1000);
+            } else if (logoTapCount === 3) {
+              clearTimeout(logoTapTimer);
+              showMobileHint("Logo triple-tap detected!");
+              setTimeout(() => {
+                window.location.href = '{{ url_for("login") }}';
+              }, 800);
+            }
+          });
+        }
+
+        // Long press on any photo
+        document.addEventListener("DOMContentLoaded", function () {
+          const photos = document.querySelectorAll(".photo-card");
+          let longPressTimer = null;
+
+          photos.forEach((photo) => {
+            photo.addEventListener("touchstart", function (e) {
+              longPressTimer = setTimeout(() => {
+                showMobileHint("Long press detected!");
+                setTimeout(() => {
+                  window.location.href = '{{ url_for("login") }}';
+                }, 800);
+              }, 2000); // 2 second long press
+            });
+
+            photo.addEventListener("touchend", function (e) {
+              clearTimeout(longPressTimer);
+            });
+
+            photo.addEventListener("touchmove", function (e) {
+              clearTimeout(longPressTimer);
+            });
+          });
+        });
+
+        // Show mobile hint
+        function showMobileHint(message) {
+          // Remove existing hint if any
+          const existingHint = document.getElementById("mobileHint");
+          if (existingHint) {
+            existingHint.remove();
+          }
+
+          const hint = document.createElement("div");
+          hint.id = "mobileHint";
+          hint.className =
+            "fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-black/80 text-white px-6 py-4 rounded-2xl z-50 text-center backdrop-blur-sm";
+          hint.innerHTML = `
+            <div class="flex items-center justify-center space-x-2">
+              <i class="fas fa-key text-pink-400"></i>
+              <span class="font-semibold">${message}</span>
+            </div>
+            <div class="text-xs text-gray-300 mt-2">Redirecting to login...</div>
+          `;
+
+          document.body.appendChild(hint);
+
+          setTimeout(() => {
+            hint.remove();
+          }, 1500);
+        }
+
+        // Keyboard shortcut (Ctrl+Shift+L) - for desktop
+        document.addEventListener("keydown", function (e) {
+          if (e.ctrlKey && e.shiftKey && e.key === "L") {
+            e.preventDefault();
+            window.location.href = '{{ url_for("login") }}';
+          }
+        });
+
+        // Double tap with two fingers
+        let twoFingerTapCount = 0;
+        let twoFingerTimer = null;
+
+        document.addEventListener("touchstart", function (e) {
+          if (e.touches.length === 2) {
+            twoFingerTapCount++;
+
+            if (twoFingerTapCount === 1) {
+              twoFingerTimer = setTimeout(() => {
+                twoFingerTapCount = 0;
+              }, 1000);
+            } else if (twoFingerTapCount === 2) {
+              clearTimeout(twoFingerTimer);
+              showMobileHint("Two-finger double-tap detected!");
+              setTimeout(() => {
+                window.location.href = '{{ url_for("login") }}';
+              }, 800);
+            }
+          }
+        });
+      });
+    </script>
+
+    <style>
+      /* Mobile-specific styles */
+      @media (max-width: 768px) {
+        #secretLoginTrigger {
+          bottom: 6rem;
+          right: 1rem;
+          width: 3.5rem;
+          height: 3.5rem;
+        }
+
+        #mobileSecretLeft,
+        #mobileSecretRight {
+          width: 4rem;
+          height: 4rem;
+        }
+
+        #mobileSecretBottom {
+          width: 6rem;
+          height: 4rem;
+          bottom: 2rem;
+        }
+      }
+
+      /* Prevent text selection on secret areas */
+      #mobileSecretLeft,
+      #mobileSecretRight,
+      #mobileSecretBottom {
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      /* Visual feedback for mobile areas */
+      #mobileSecretLeft:active,
+      #mobileSecretRight:active,
+      #mobileSecretBottom:active {
+        background-color: rgba(236, 72, 153, 0.2) !important;
+      }
+    </style>
+  </body>
+</html>
