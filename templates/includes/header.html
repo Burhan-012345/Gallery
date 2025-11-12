@@ -1,0 +1,118 @@
+<header class="relative z-50">
+  <nav
+    class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg border-b border-pink-100 dark:border-gray-700 shadow-lg transition-all duration-500"
+  >
+    <div class="container mx-auto px-4">
+      <div class="flex justify-between items-center py-4">
+        <!-- Logo -->
+        <div class="flex items-center space-x-3">
+          <a
+            href="{{ url_for('index') }}"
+            class="header-logo flex items-center space-x-3 group cursor-pointer"
+          >
+            <div
+              class="w-10 h-10 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg transform transition-all duration-500 group-hover:scale-110 group-hover:rotate-12"
+            >
+              <i class="fas fa-heart text-white text-lg"></i>
+            </div>
+            <div>
+              <h1
+                class="text-2xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent"
+              >
+                Our Memories
+              </h1>
+              <p class="text-xs text-gray-500 dark:text-gray-400 -mt-1">
+                Forever in our hearts 💖
+              </p>
+            </div>
+          </a>
+        </div>
+
+        <!-- Navigation Links -->
+        <div class="flex items-center space-x-2">
+          <!-- Home Link -->
+          <a
+            href="{{ url_for('index') }}"
+            class="nav-link px-4 py-2 rounded-full text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-all duration-300 transform hover:scale-105 flex items-center space-x-2"
+          >
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+          </a>
+
+          <!-- Favorites Link -->
+          <a
+            href="{{ url_for('favorites') }}"
+            class="nav-link px-4 py-2 rounded-full text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-all duration-300 transform hover:scale-105 flex items-center space-x-2"
+          >
+            <i class="fas fa-heart"></i>
+            <span>Favorites</span>
+          </a>
+
+          <!-- Admin Dashboard (only show if logged in) -->
+          {% if current_user.is_authenticated %}
+          <a
+            href="{{ url_for('admin') }}"
+            class="nav-link px-4 py-2 rounded-full bg-pink-500 text-white hover:bg-pink-600 transition-all duration-300 transform hover:scale-105 flex items-center space-x-2"
+          >
+            <i class="fas fa-cog"></i>
+            <span>Dashboard</span>
+          </a>
+
+          <!-- Logout -->
+          <a
+            href="{{ url_for('logout') }}"
+            class="nav-link px-4 py-2 rounded-full bg-gray-500 text-white hover:bg-gray-600 transition-all duration-300 transform hover:scale-105 flex items-center space-x-2"
+          >
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Logout</span>
+          </a>
+          {% endif %}
+
+          <!-- Theme Toggle -->
+          <button
+            id="themeToggle"
+            class="p-2 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-all duration-300 transform hover:scale-110"
+            title="Toggle Theme"
+          >
+            <i class="fas fa-moon" id="themeIcon"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+</header>
+
+<script>
+  // Theme toggle functionality
+  document.addEventListener("DOMContentLoaded", function () {
+    const themeToggle = document.getElementById("themeToggle");
+    const themeIcon = document.getElementById("themeIcon");
+
+    // Check for saved theme or prefer color scheme
+    const savedTheme =
+      localStorage.getItem("theme") ||
+      (window.matchMedia("(prefers-color-scheme: dark)").matches
+        ? "dark"
+        : "light");
+
+    if (savedTheme === "dark") {
+      document.documentElement.classList.add("dark");
+      themeIcon.className = "fas fa-sun";
+    } else {
+      document.documentElement.classList.remove("dark");
+      themeIcon.className = "fas fa-moon";
+    }
+
+    themeToggle.addEventListener("click", function () {
+      if (document.documentElement.classList.contains("dark")) {
+        document.documentElement.classList.remove("dark");
+        localStorage.setItem("theme", "light");
+        themeIcon.className = "fas fa-moon";
+      } else {
+        document.documentElement.classList.add("dark");
+        localStorage.setItem("theme", "dark");
+        themeIcon.className = "fas fa-sun";
+      }
+    });
+  });
+</script>

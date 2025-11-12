@@ -1,0 +1,368 @@
+<!-- Two-Side Photo Modal -->
+<div id="photoModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+  <!-- Backdrop -->
+  <div
+    class="fixed inset-0 bg-black/90 backdrop-blur-sm transition-opacity duration-500"
+    onclick="closePhotoModal()"
+  ></div>
+
+  <!-- Modal Container -->
+  <div class="relative min-h-full flex items-center justify-center p-4">
+    <div
+      class="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col md:flex-row overflow-hidden transform transition-all duration-500 scale-95 opacity-0 relative z-10"
+      id="modalContent"
+      onclick="event.stopPropagation()"
+    >
+      <!-- Close Button -->
+      <button
+        class="absolute top-4 right-4 z-20 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm p-3 rounded-full text-gray-600 dark:text-gray-300 hover:text-pink-500 dark:hover:text-pink-400 transition-all duration-300 transform hover:scale-110 hover:rotate-90 shadow-lg border border-gray-200 dark:border-gray-600"
+        onclick="closePhotoModal()"
+      >
+        <i class="fas fa-times text-xl"></i>
+      </button>
+
+      <!-- Left Side - Photo -->
+      <div
+        class="flex-1 flex items-center justify-center bg-gray-100 dark:bg-gray-900 p-4 md:p-8 relative min-h-[400px] md:min-h-0 overflow-hidden"
+      >
+        <!-- Loading Spinner -->
+        <div
+          id="modalLoading"
+          class="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-900 transition-opacity duration-300 z-10"
+        >
+          <div
+            class="w-16 h-16 border-4 border-pink-500 border-t-transparent rounded-full animate-spin"
+          ></div>
+        </div>
+
+        <!-- Photo -->
+        <img
+          id="modalImage"
+          class="max-w-full max-h-full object-contain rounded-lg shadow-2xl transition-all duration-500 transform"
+          src=""
+          alt=""
+          onload="hideModalLoading()"
+          onerror="hideModalLoading()"
+        />
+
+        <!-- Navigation Arrows -->
+        <button
+          id="modalPrev"
+          class="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm p-3 md:p-4 rounded-full text-gray-600 dark:text-gray-300 hover:text-pink-500 dark:hover:text-pink-400 transition-all duration-300 transform hover:scale-110 shadow-lg border border-gray-200 dark:border-gray-600 z-20"
+        >
+          <i class="fas fa-chevron-left text-lg md:text-xl"></i>
+        </button>
+
+        <button
+          id="modalNext"
+          class="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm p-3 md:p-4 rounded-full text-gray-600 dark:text-gray-300 hover:text-pink-500 dark:hover:text-pink-400 transition-all duration-300 transform hover:scale-110 shadow-lg border border-gray-200 dark:border-gray-600 z-20"
+        >
+          <i class="fas fa-chevron-right text-lg md:text-xl"></i>
+        </button>
+      </div>
+
+      <!-- Right Side - Details -->
+      <div
+        class="md:w-96 flex flex-col bg-gradient-to-b from-white to-pink-50 dark:from-gray-800 dark:to-purple-900/20 border-l border-pink-100 dark:border-gray-700"
+      >
+        <!-- Header with Favorite Heart Icon -->
+        <div
+          class="p-6 border-b border-pink-100 dark:border-gray-700 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm"
+        >
+          <div class="flex items-center justify-between">
+            <h3 class="text-2xl font-bold text-gray-800 dark:text-white">
+              Our Memory
+            </h3>
+            <!-- Favorite Heart Button -->
+            <button
+              id="modalFavorite"
+              class="p-3 transition-all duration-300 transform hover:scale-110 bg-white/50 dark:bg-gray-700/50 rounded-full shadow-lg border border-pink-200 dark:border-gray-600 favorite-heart-btn"
+              onclick="toggleModalFavorite(currentPhotos[currentModalIndex].id)"
+            >
+              <i
+                class="fas fa-heart text-xl text-gray-400"
+                id="modalHeartIcon"
+              ></i>
+            </button>
+          </div>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            Shared on <span id="modalDate"></span>
+          </p>
+        </div>
+
+        <!-- Scrollable Content -->
+        <div class="flex-1 overflow-y-auto">
+          <!-- Caption -->
+          <div class="p-6 border-b border-pink-100 dark:border-gray-700">
+            <h4
+              class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center"
+            >
+              <i class="fas fa-quote-left text-pink-500 mr-2"></i>
+              The Story
+            </h4>
+            <p
+              id="modalCaption"
+              class="text-gray-600 dark:text-gray-400 leading-relaxed text-lg"
+            >
+              <!-- Caption will be inserted here -->
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Font Awesome CDN for Icons -->
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+/>
+
+<script>
+  // Modal functionality
+  function hideModalLoading() {
+    const loading = document.getElementById("modalLoading");
+    if (loading) {
+      loading.style.opacity = "0";
+      setTimeout(() => {
+        loading.style.display = "none";
+      }, 300);
+    }
+  }
+
+  function showPhotoInModal(index) {
+    if (
+      typeof currentPhotos === "undefined" ||
+      index < 0 ||
+      index >= currentPhotos.length
+    )
+      return;
+
+    const photo = currentPhotos[index];
+
+    // Update image
+    const image = document.getElementById("modalImage");
+    if (image) {
+      image.src = photo.url;
+      image.alt = photo.caption;
+    }
+
+    // Update details
+    const captionEl = document.getElementById("modalCaption");
+    const dateEl = document.getElementById("modalDate");
+
+    if (captionEl) captionEl.textContent = photo.caption;
+    if (dateEl) dateEl.textContent = photo.date;
+
+    // Update favorite button with proper heart icon state
+    const favoriteBtn = document.getElementById("modalFavorite");
+    const favoriteIcon = document.getElementById("modalHeartIcon");
+
+    if (favoriteBtn && favoriteIcon) {
+      if (photo.is_favorite) {
+        favoriteIcon.className = "fas fa-heart text-xl text-red-500";
+        favoriteBtn.classList.add(
+          "bg-red-50",
+          "border-red-200",
+          "dark:bg-red-900/20"
+        );
+        favoriteBtn.classList.remove("bg-white/50", "border-pink-200");
+      } else {
+        favoriteIcon.className = "fas fa-heart text-xl text-gray-400";
+        favoriteBtn.classList.remove(
+          "bg-red-50",
+          "border-red-200",
+          "dark:bg-red-900/20"
+        );
+        favoriteBtn.classList.add("bg-white/50", "border-pink-200");
+      }
+
+      // Update favorite button click handler
+      favoriteBtn.onclick = () => toggleModalFavorite(photo.id);
+    }
+
+    // Update navigation
+    updateModalNavigation();
+  }
+
+  function updateModalNavigation() {
+    const prevBtn = document.getElementById("modalPrev");
+    const nextBtn = document.getElementById("modalNext");
+
+    if (prevBtn) {
+      prevBtn.style.display = currentModalIndex > 0 ? "block" : "none";
+      prevBtn.onclick = currentModalIndex > 0 ? () => navigateModal(-1) : null;
+    }
+
+    if (nextBtn) {
+      nextBtn.style.display =
+        currentModalIndex < currentPhotos.length - 1 ? "block" : "none";
+      nextBtn.onclick =
+        currentModalIndex < currentPhotos.length - 1
+          ? () => navigateModal(1)
+          : null;
+    }
+  }
+
+  function navigateModal(direction) {
+    const newIndex = currentModalIndex + direction;
+    if (newIndex >= 0 && newIndex < currentPhotos.length) {
+      currentModalIndex = newIndex;
+
+      // Show loading during navigation
+      const loading = document.getElementById("modalLoading");
+      if (loading) {
+        loading.style.display = "flex";
+        loading.style.opacity = "1";
+      }
+
+      showPhotoInModal(newIndex);
+    }
+  }
+
+  function handleModalKeyboard(event) {
+    switch (event.key) {
+      case "Escape":
+        closePhotoModal();
+        break;
+      case "ArrowLeft":
+        navigateModal(-1);
+        break;
+      case "ArrowRight":
+        navigateModal(1);
+        break;
+    }
+  }
+
+  async function toggleModalFavorite(photoId) {
+    try {
+      const response = await fetch(`/toggle_favorite/${photoId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await response.json();
+      const favoriteBtn = document.getElementById("modalFavorite");
+      const favoriteIcon = document.getElementById("modalHeartIcon");
+
+      if (favoriteBtn && favoriteIcon) {
+        if (data.is_favorite) {
+          // Heart becomes red when favorited
+          favoriteIcon.className = "fas fa-heart text-xl text-red-500";
+          favoriteBtn.classList.add(
+            "bg-red-50",
+            "border-red-200",
+            "dark:bg-red-900/20",
+            "animate-pulse"
+          );
+          favoriteBtn.classList.remove("bg-white/50", "border-pink-200");
+          setTimeout(() => favoriteBtn.classList.remove("animate-pulse"), 600);
+        } else {
+          // Heart becomes gray when unfavorited
+          favoriteIcon.className = "fas fa-heart text-xl text-gray-400";
+          favoriteBtn.classList.remove(
+            "bg-red-50",
+            "border-red-200",
+            "dark:bg-red-900/20"
+          );
+          favoriteBtn.classList.add("bg-white/50", "border-pink-200");
+        }
+      }
+
+      // Update the photo data
+      const photoIndex = currentPhotos.findIndex(
+        (photo) => photo.id === photoId
+      );
+      if (photoIndex !== -1) {
+        currentPhotos[photoIndex].is_favorite = data.is_favorite;
+      }
+
+      // Update the grid favorite button
+      const gridFavoriteBtn = document.querySelector(
+        `[data-photo-id="${photoId}"] .favorite-btn`
+      );
+      if (gridFavoriteBtn) {
+        const gridIcon = gridFavoriteBtn.querySelector("i");
+        if (data.is_favorite) {
+          gridIcon.classList.remove("text-white");
+          gridIcon.classList.add("text-red-500");
+        } else {
+          gridIcon.classList.remove("text-red-500");
+          gridIcon.classList.add("text-white");
+        }
+      }
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+    }
+  }
+
+  // Make functions globally available
+  window.showPhotoInModal = showPhotoInModal;
+  window.navigateModal = navigateModal;
+  window.toggleModalFavorite = toggleModalFavorite;
+  window.hideModalLoading = hideModalLoading;
+  window.handleModalKeyboard = handleModalKeyboard;
+  window.updateModalNavigation = updateModalNavigation;
+</script>
+
+<style>
+  .animate-pulse {
+    animation: pulse 0.6s ease-in-out;
+  }
+
+  @keyframes pulse {
+    0%,
+    100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.1);
+    }
+  }
+
+  .favorite-heart-btn {
+    transition: all 0.3s ease;
+  }
+
+  /* Ensure Font Awesome icons display */
+  .fas,
+  .far,
+  .fab {
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+  }
+
+  /* Custom scrollbar for modal */
+  .overflow-y-auto::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .overflow-y-auto::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 3px;
+  }
+
+  .overflow-y-auto::-webkit-scrollbar-thumb {
+    background: #ec4899;
+    border-radius: 3px;
+  }
+
+  .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+    background: #db2777;
+  }
+
+  .dark .overflow-y-auto::-webkit-scrollbar-track {
+    background: #374151;
+  }
+
+  .dark .overflow-y-auto::-webkit-scrollbar-thumb {
+    background: #ec4899;
+  }
+
+  .dark .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+    background: #db2777;
+  }
+</style>
